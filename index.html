@@ -16,10 +16,11 @@
         /* background-color: cyan; */
         /* padding: 10px; */
         font-family: "Courier New", Courier, monospace;
-        line-height: 20px;
+        line-height: 2em;
         font-size: 2em;
         color: red;
         font-weight: bolder;
+        text-align: center;
       }
       body {
         background-color: #333;
@@ -101,7 +102,7 @@
         // then call move() pacman
         findDirection(e) {
           if (this.message.textContent) this.message.textContent = "";
-          
+
           switch (e.key) {
             case "up":
             case "w":
@@ -151,8 +152,9 @@
               this.moveTo.moveX = 0;
               this.moveTo.moveY = 0;
               this.moveTo.direction = null;
-              this.message.textContent =
-                "Use UpDownLeftRight, IJKL, ASWD to move!";
+              this.message.innerHTML =
+                "Keyboard: ↑ ↓ ← →, IJKL, and/or ASWD<br>" +
+                "<br>Swipe: Up Down Left Right to move";
           }
 
           this.setCoords();
@@ -181,7 +183,7 @@
               } else {
                 this.moveTo.interval = 0;
                 this.pacCoords.y =
-                  this.box.clientHeight - this.pacman.clientHeight;
+                  this.box.clientHeight - (this.pacman.clientHeight / 2);
               }
               break;
             case "down":
@@ -233,6 +235,7 @@
 
       game.findDirection("");
       // FINAL STEP - refactor everything into one big object called const game = { ... }
+
       // credit: http://www.javascriptkit.com/javatutors/touchevents2.shtml
       function swipedetect(el, callback) {
         var touchsurface = el,

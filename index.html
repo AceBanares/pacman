@@ -304,6 +304,7 @@
 
       swipedetect(game.box, function(swipedir) {
         // swipedir contains either "none", "left", "right", "top", or "down"
+        game.message.textContent = swipedir;
         let direction = [];
         direction.key = swipedir;
         findDirection(direction);

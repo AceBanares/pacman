@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Document</title>
+    <style>
+      body {
+        background-color: #333;
+      }
+      #maze {
+        border: 10px solid blue;
+        height: 90vh;
+        width: 90vw;
+        border-radius: 5px;
+        position: absolute;
+      }
+
+      #pacman {
+        height: 100px;
+        width: 100px;
+        /* top: 200px;
+        left: 200px; */
+        /* position: relative; */
+        /* position: absolute; */
+        position: fixed;
+      }
+
+      #pacman circle {
+        stroke: yellow;
+        stroke-width: 50%;
+        fill: none;
+        animation: chomp 0.4s linear infinite alternate;
+      }
+
+      @keyframes chomp {
+        from {
+          stroke-dasharray: 157, 100;
+          stroke-dashoffset: 0;
+        }
+        to {
+          stroke-dasharray: 126, 100;
+          stroke-dashoffset: -15;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="maze">
+      <svg id="pacman" viewbox="0 0 100 100">
+        <circle cx="50%" cy="50%" r="25%" />
+      </svg>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/2.1.3/TweenMax.min.js"></script>
+    <script>
+      const box = document.querySelector("#maze");
+      const game = {
+        pacman: document.querySelector("#pacman"),
+
+        pacCoords: {
+          x: 0,
+          y: 0
+        },
+
+        moveCoords: {
+          moveX: 0,
+          moveY: 0,
+          direction: null
+        },
+
+        // Wait for an arrow key to be pressed
+
+        // upon arrow keydown, figure out which direction it was, then
+        // set call setCoords() to set pacman's new coordinates,
+        // then call move() pacman
+        findDirection(e) {
+          switch (e.key) {
+            case "w":
+            case "i":
+            case "ArrowUp":
+              this.moveCoords.moveX = 0;
+              this.moveCoords.moveY = -1;
+              this.moveCoords.direction = "up";
+              break;
+            case "s":
+            case "k":
+            case "ArrowDown":
+              this.moveCoords.moveX = 0;
+              this.moveCoords.moveY = 1;
+              this.moveCoords.direction = "down";
+              break;
+            case "a":
+            case "j":
+            case "ArrowLeft":
+              this.moveCoords.moveX = -1;
+              this.moveCoords.moveY = 0;
+              this.moveCoords.direction = "left";
+              break;
+            case "d":
+            case "l":
+            case "ArrowRight":
+              this.moveCoords.moveX = 1;
+              this.moveCoords.moveY = 0;
+              this.moveCoords.direction = "right";
+              break;
+            default:
+              this.moveCoords.moveX = 0;
+              this.moveCoords.moveY = 0;
+              this.moveCoords.direction = null;
+              console.error("Use UpDownLeftRight, IJKL, ASWD to move!");
+          }
+
+          this.setCoords();
+        },
+
+        // set pacman's new coordinates
+        setCoords() {
+          let move = true;
+
+          switch (this.moveCoords.direction) {
+            case "up":
+              if (
+                this.pacCoords.y + this.pacman.clientHeight * 0.8 >
+                box.clientTop
+              ) {
+                this.pacCoords.y += this.moveCoords.moveY;
+              } else {
+                this.pacCoords.y =
+                  box.clientHeight + this.pacman.clientHeight * 0.4;
+              }
+              break;
+            case "down":
+              if (
+                this.pacCoords.y + this.pacman.clientHeight / 3 <
+                box.clientHeight
+              ) {
+                this.pacCoords.y += this.moveCoords.moveY;
+              } else {
+                this.pacCoords.y =
+                  box.clientTop - this.pacman.clientHeight * 1.5;
+              }
+              break;
+            case "left":
+              if (
+                this.pacCoords.x + this.pacman.clientWidth * 0.8 >
+                box.clientLeft
+              ) {
+                this.pacCoords.x += this.moveCoords.moveX;
+              } else {
+                this.pacCoords.x = box.clientWidth + this.pacman.clientWidth;
+              }
+              break;
+            case "right":
+              if (
+                this.pacCoords.x + this.pacman.clientWidth / 3 <
+                box.clientWidth
+              ) {
+                this.pacCoords.x += this.moveCoords.moveX;
+              } else {
+                this.pacCoords.x = box.clientLeft - this.pacman.clientWidth * 2;
+              }
+              break;
+            default:
+              move = false;
+          }
+
+          if (move) this.move();
+        },
+
+        // move pacman based on its coordinates using TweenMax
+
+        move() {
+          TweenMax.to(this.pacman, 1, {
+            x: this.pacCoords.x,
+            y: this.pacCoords.y
+          });
+        }
+      };
+
+      // game.pacman.setAttribute.top = 200;
+      // game.pacman.setAttribute.left = 200;
+      window.addEventListener("keydown", game.findDirection.bind(game));
+      setInterval(game.setCoords.bind(game), 1);
+      // FINAL STEP - refactor everything into one big object called const game = { ... }
+    </script>
+  </body>
+</html>

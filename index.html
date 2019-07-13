@@ -101,7 +101,7 @@
         // then call move() pacman
         findDirection(e) {
           if (this.message.textContent) this.message.textContent = "";
-
+          
           switch (e.key) {
             case "up":
             case "w":
@@ -155,6 +155,7 @@
                 "Use UpDownLeftRight, IJKL, ASWD to move!";
           }
 
+          this.message.textContent = e;
           this.setCoords();
         },
 
@@ -304,10 +305,10 @@
 
       swipedetect(game.box, function(swipedir) {
         // swipedir contains either "none", "left", "right", "top", or "down"
-        let direction = [];
-        direction.key = swipedir;
-        game.message.textContent = direction;
-        findDirection(direction);
+        // let direction = [];
+        // direction.key = swipedir;
+        // game.message.textContent = direction;
+        findDirection(swipedir);
       });
     </script>
   </body>

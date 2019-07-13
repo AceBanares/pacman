@@ -5,16 +5,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <title>Document</title>
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+      integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T"
+      crossorigin="anonymous"
+    />
     <style>
+      p {
+        /* background-color: cyan; */
+        /* padding: 10px; */
+        font-family: "Courier New", Courier, monospace;
+        line-height: 20px;
+        font-size: 2em;
+        color: red;
+        font-weight: bolder;
+      }
       body {
         background-color: #333;
       }
       #maze {
-        border: 10px solid blue;
-        height: 90vh;
-        width: 90vw;
+        /* border: 10px solid blue;
         border-radius: 5px;
-        position: absolute;
+        position: absolute; */
+        height: 94vh;
+        width: 94vw;
+        margin: auto;
       }
 
       #pacman {
@@ -24,7 +40,6 @@
         left: 200px; */
         /* position: relative; */
         /* position: absolute; */
-        position: fixed;
       }
 
       #pacman circle {
@@ -44,18 +59,27 @@
           stroke-dashoffset: -15;
         }
       }
+
+      .centered {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+      }
     </style>
   </head>
   <body>
     <div id="maze">
-      <svg id="pacman" viewbox="0 0 100 100">
+      <svg id="pacman" viewthis.box="0 0 100 100">
         <circle cx="50%" cy="50%" r="25%" />
       </svg>
+      <div class="centered"><p id="message"></p></div>
     </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/2.1.3/TweenMax.min.js"></script>
     <script>
-      const box = document.querySelector("#maze");
       const game = {
+        message: document.querySelector("#message"),
+        box: document.querySelector("#maze"),
         pacman: document.querySelector("#pacman"),
 
         pacCoords: {
@@ -63,9 +87,10 @@
           y: 0
         },
 
-        moveCoords: {
+        moveTo: {
           moveX: 0,
           moveY: 0,
+          interval: 1,
           direction: null
         },
 
@@ -75,40 +100,55 @@
         // set call setCoords() to set pacman's new coordinates,
         // then call move() pacman
         findDirection(e) {
+          if (this.message.textContent) this.message.textContent = "";
+
           switch (e.key) {
             case "w":
             case "i":
             case "ArrowUp":
-              this.moveCoords.moveX = 0;
-              this.moveCoords.moveY = -1;
-              this.moveCoords.direction = "up";
+              this.moveTo.moveX = 0;
+              this.moveTo.moveY = -1;
+              this.moveTo.direction = "up";
+              TweenMax.to(this.pacman, 0, {
+                rotation: 270
+              });
               break;
             case "s":
             case "k":
             case "ArrowDown":
-              this.moveCoords.moveX = 0;
-              this.moveCoords.moveY = 1;
-              this.moveCoords.direction = "down";
+              this.moveTo.moveX = 0;
+              this.moveTo.moveY = 1;
+              this.moveTo.direction = "down";
+              TweenMax.to(this.pacman, 0, {
+                rotation: 90
+              });
               break;
             case "a":
             case "j":
             case "ArrowLeft":
-              this.moveCoords.moveX = -1;
-              this.moveCoords.moveY = 0;
-              this.moveCoords.direction = "left";
+              this.moveTo.moveX = -1;
+              this.moveTo.moveY = 0;
+              this.moveTo.direction = "left";
+              TweenMax.to(this.pacman, 0, {
+                rotation: 180
+              });
               break;
             case "d":
             case "l":
             case "ArrowRight":
-              this.moveCoords.moveX = 1;
-              this.moveCoords.moveY = 0;
-              this.moveCoords.direction = "right";
+              this.moveTo.moveX = 1;
+              this.moveTo.moveY = 0;
+              this.moveTo.direction = "right";
+              TweenMax.to(this.pacman, 0, {
+                rotation: 0
+              });
               break;
             default:
-              this.moveCoords.moveX = 0;
-              this.moveCoords.moveY = 0;
-              this.moveCoords.direction = null;
-              console.error("Use UpDownLeftRight, IJKL, ASWD to move!");
+              this.moveTo.moveX = 0;
+              this.moveTo.moveY = 0;
+              this.moveTo.direction = null;
+              this.message.textContent =
+                "Use UpDownLeftRight, IJKL, ASWD to move!";
           }
 
           this.setCoords();
@@ -118,47 +158,52 @@
         setCoords() {
           let move = true;
 
-          switch (this.moveCoords.direction) {
+          if (!this.moveTo.interval) this.moveTo.interval = 1;
+
+          const isUp = this.pacCoords.y > this.box.clientTop; // - this.pacman.clientHeight;
+          const isDown =
+            this.pacCoords.y + this.pacman.clientHeight < this.box.clientHeight;
+          const isLeft =
+            this.pacCoords.x + this.pacman.clientWidth / 2 >
+            this.box.clientLeft; // - this.pacman.clientWidth;
+          const isRight =
+            this.pacCoords.x + this.pacman.clientWidth / 2 <
+            this.box.clientWidth;
+
+          switch (this.moveTo.direction) {
             case "up":
-              if (
-                this.pacCoords.y + this.pacman.clientHeight * 0.8 >
-                box.clientTop
-              ) {
-                this.pacCoords.y += this.moveCoords.moveY;
+              if (isUp) {
+                this.pacCoords.y += this.moveTo.moveY;
               } else {
+                this.moveTo.interval = 0;
                 this.pacCoords.y =
-                  box.clientHeight + this.pacman.clientHeight * 0.4;
+                  this.box.clientHeight - this.pacman.clientHeight;
               }
               break;
             case "down":
-              if (
-                this.pacCoords.y + this.pacman.clientHeight / 3 <
-                box.clientHeight
-              ) {
-                this.pacCoords.y += this.moveCoords.moveY;
+              if (isDown) {
+                this.pacCoords.y += this.moveTo.moveY;
               } else {
-                this.pacCoords.y =
-                  box.clientTop - this.pacman.clientHeight * 1.5;
+                this.moveTo.interval = 0;
+                this.pacCoords.y = this.box.clientTop; // - this.pacman.clientHeight * 2;
               }
               break;
             case "left":
-              if (
-                this.pacCoords.x + this.pacman.clientWidth * 0.8 >
-                box.clientLeft
-              ) {
-                this.pacCoords.x += this.moveCoords.moveX;
+              if (isLeft) {
+                this.pacCoords.x += this.moveTo.moveX;
               } else {
-                this.pacCoords.x = box.clientWidth + this.pacman.clientWidth;
+                this.moveTo.interval = 0;
+                this.pacCoords.x =
+                  this.box.clientWidth - this.pacman.clientWidth;
               }
               break;
             case "right":
-              if (
-                this.pacCoords.x + this.pacman.clientWidth / 3 <
-                box.clientWidth
-              ) {
-                this.pacCoords.x += this.moveCoords.moveX;
+              if (isRight) {
+                this.pacCoords.x += this.moveTo.moveX;
               } else {
-                this.pacCoords.x = box.clientLeft - this.pacman.clientWidth * 2;
+                this.moveTo.interval = 0;
+                this.pacCoords.x =
+                  this.box.clientLeft - this.pacman.clientWidth / 2;
               }
               break;
             default:
@@ -171,17 +216,18 @@
         // move pacman based on its coordinates using TweenMax
 
         move() {
-          TweenMax.to(this.pacman, 1, {
+          TweenMax.to(this.pacman, this.moveTo.interval, {
             x: this.pacCoords.x,
             y: this.pacCoords.y
           });
         }
       };
 
-      // game.pacman.setAttribute.top = 200;
-      // game.pacman.setAttribute.left = 200;
       window.addEventListener("keydown", game.findDirection.bind(game));
-      setInterval(game.setCoords.bind(game), 1);
+
+      setInterval(game.setCoords.bind(game), 4);
+
+      game.findDirection("");
       // FINAL STEP - refactor everything into one big object called const game = { ... }
     </script>
   </body>

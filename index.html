@@ -305,10 +305,10 @@
 
       swipedetect(game.box, function(swipedir) {
         // swipedir contains either "none", "left", "right", "top", or "down"
-        // let direction = [];
-        // direction.key = swipedir;
-        // game.message.textContent = direction;
-        game.findDirection(swipedir);
+        let direction = [];
+        direction.key = swipedir;
+        game.message.textContent = direction.key;
+        // game.findDirection(swipedir);
       });
     </script>
   </body>

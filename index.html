@@ -14,7 +14,7 @@
             font-family: "Courier New", Courier, monospace;
             line-height: 1.5em;
             font-size: 1.5em;
-            color: red;
+            color: cyan;
             font-weight: bolder;
             text-align: center;
         }
@@ -44,7 +44,7 @@
             height: 20px;
             width: 20px;
             /* fill: yellow; */
-            fill: cyan;
+            fill: gold;
             position: fixed;
         }
         
@@ -299,9 +299,9 @@
                 startY,
                 distX,
                 distY,
-                threshold = 33, //required min distance traveled to be considered swipe
-                restraint = 99, // maximum distance allowed at the same time in perpendicular direction
-                allowedTime = 297, // maximum time allowed to travel that distance
+                threshold = 30, //required min distance traveled to be considered swipe
+                restraint = 90, // maximum distance allowed at the same time in perpendicular direction
+                allowedTime = 270, // maximum time allowed to travel that distance
                 elapsedTime,
                 startTime,
                 handleswipe = callback || function(swipedir) {};

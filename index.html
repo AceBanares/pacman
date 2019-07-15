@@ -1,317 +1,373 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+
+<head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <title>Pacman's Den</title>
-    <link
-      rel="stylesheet"
-      href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
-      integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T"
-      crossorigin="anonymous"
-    />
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous" />
     <style>
-      p {
-        /* background-color: cyan; */
-        /* padding: 10px; */
-        font-family: "Courier New", Courier, monospace;
-        line-height: 2em;
-        font-size: 2em;
-        color: red;
-        font-weight: bolder;
-        text-align: center;
-      }
-      body {
-        background-color: #333;
-      }
-      #maze {
-        /* border: 10px solid blue;
-        border-radius: 5px;
-        position: absolute; */
-        height: 94vh;
-        width: 94vw;
-        margin: auto;
-      }
-
-      #pacman {
-        height: 100px;
-        width: 100px;
-        /* top: 200px;
+        p {
+            /* background-color: cyan; */
+            /* padding: 10px; */
+            font-family: "Courier New", Courier, monospace;
+            line-height: 2em;
+            font-size: 2em;
+            color: red;
+            font-weight: bolder;
+            text-align: center;
+        }
+        
+        body {
+            background-color: #333;
+        }
+        
+        #maze {
+            /* border: 10px solid blue;
+        border-radius: 5px; */
+            position: absolute;
+            height: 100vh;
+            width: 100vw;
+            /* margin: auto; */
+        }
+        
+        #pacman {
+            height: 100px;
+            width: 100px;
+            /* top: 200px;
         left: 200px; */
-        /* position: relative; */
-        /* position: absolute; */
-      }
-
-      #pacman circle {
-        stroke: yellow;
-        stroke-width: 50%;
-        fill: none;
-        animation: chomp 0.4s linear infinite alternate;
-      }
-
-      @keyframes chomp {
-        from {
-          stroke-dasharray: 157, 100;
-          stroke-dashoffset: 0;
+            position: fixed;
         }
-        to {
-          stroke-dasharray: 126, 100;
-          stroke-dashoffset: -15;
+        
+        #food {
+            height: 20px;
+            width: 20px;
+            /* fill: yellow; */
+            fill: cyan;
+            position: fixed;
         }
-      }
-
-      .centered {
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-      }
+        
+        #pacman circle {
+            stroke: yellow;
+            stroke-width: 50%;
+            fill: none;
+            animation: chomp 0.4s linear infinite alternate;
+        }
+        
+        @keyframes chomp {
+            from {
+                stroke-dasharray: 157, 100;
+                stroke-dashoffset: 0;
+            }
+            to {
+                stroke-dasharray: 126, 100;
+                stroke-dashoffset: -15;
+            }
+        }
+        
+        .centered {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
     </style>
-  </head>
-  <body>
+</head>
+
+<body>
     <div id="maze">
-      <svg id="pacman" viewthis.box="0 0 100 100">
-        <circle cx="50%" cy="50%" r="25%" />
-      </svg>
-      <div class="centered"><p id="message"></p></div>
+        <svg id="pacman" viewBox="0 0 100 100">
+            <circle cx="50%" cy="50%" r="25%" />
+        </svg>
+        <svg id="food">
+            <circle cx="50%" cy="50%" r="10" />
+        </svg>
+        <div class="centered">
+            <p id="message"></p>
+        </div>
+        <div class="centered">
+            <p id="score"></p>
+        </div>
     </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/2.1.3/TweenMax.min.js"></script>
     <script>
-      const game = {
-        message: document.querySelector("#message"),
-        box: document.querySelector("#maze"),
-        pacman: document.querySelector("#pacman"),
+        const game = {
+            den: document.querySelector("#maze"),
+            pacman: document.querySelector("#pacman"),
+            food: document.querySelector("#food"),
+            message: document.querySelector("#message"),
+            newscore: document.querySelector("#score"),
 
-        pacCoords: {
-          x: 0,
-          y: 0
-        },
+            pacCoords: {
+                x: 0,
+                y: 0
+            },
 
-        moveTo: {
-          moveX: 0,
-          moveY: 0,
-          interval: 1,
-          direction: null
-        },
+            pacMoves: {
+                moveX: 0,
+                moveY: 0,
+                interval: 1,
+                direction: null
+            },
 
-        // Wait for an arrow key to be pressed
+            foodCoords: {
+                x: 0,
+                y: 0
+            },
 
-        // upon arrow keydown, figure out which direction it was, then
-        // set call setCoords() to set pacman's new coordinates,
-        // then call move() pacman
-        findDirection(e) {
-          if (this.message.textContent) this.message.textContent = "";
+            // Wait for an arrow key to be pressed
+            // upon arrow keydown, figure out which direction it was, then
+            // set call setCoords() to set pacman's new coordinates,
+            // then call move() pacman
 
-          switch (e.key) {
-            case "up":
-            case "w":
-            case "i":
-            case "ArrowUp":
-              this.moveTo.moveX = 0;
-              this.moveTo.moveY = -1;
-              this.moveTo.direction = "up";
-              TweenMax.to(this.pacman, 0, {
-                rotation: 270
-              });
-              break;
-            case "down":
-            case "s":
-            case "k":
-            case "ArrowDown":
-              this.moveTo.moveX = 0;
-              this.moveTo.moveY = 1;
-              this.moveTo.direction = "down";
-              TweenMax.to(this.pacman, 0, {
-                rotation: 90
-              });
-              break;
-            case "left":
-            case "a":
-            case "j":
-            case "ArrowLeft":
-              this.moveTo.moveX = -1;
-              this.moveTo.moveY = 0;
-              this.moveTo.direction = "left";
-              TweenMax.to(this.pacman, 0, {
-                rotation: 180
-              });
-              break;
-            case "right":
-            case "d":
-            case "l":
-            case "ArrowRight":
-              this.moveTo.moveX = 1;
-              this.moveTo.moveY = 0;
-              this.moveTo.direction = "right";
-              TweenMax.to(this.pacman, 0, {
-                rotation: 0
-              });
-              break;
-            default:
-              this.moveTo.moveX = 0;
-              this.moveTo.moveY = 0;
-              this.moveTo.direction = null;
-              this.message.innerHTML =
-                "Keyboard: ↑ ↓ ← →, IJKL, and/or ASWD<br>" +
-                "<br>Swipe: Up Down Left Right to move";
-          }
+            findDirection(e) {
+                if (this.message.textContent) this.message.textContent = "";
 
-          this.setCoords();
-        },
+                switch (e.key) {
+                    case "up":
+                    case "w":
+                    case "i":
+                    case "ArrowUp":
+                        this.pacMoves.moveX = 0;
+                        this.pacMoves.moveY = -1;
+                        this.pacMoves.direction = "up";
+                        TweenMax.to(this.pacman, 0, {
+                            rotation: 270
+                        });
+                        break;
+                    case "down":
+                    case "s":
+                    case "k":
+                    case "ArrowDown":
+                        this.pacMoves.moveX = 0;
+                        this.pacMoves.moveY = 1;
+                        this.pacMoves.direction = "down";
+                        TweenMax.to(this.pacman, 0, {
+                            rotation: 90
+                        });
+                        break;
+                    case "left":
+                    case "a":
+                    case "j":
+                    case "ArrowLeft":
+                        this.pacMoves.moveX = -1;
+                        this.pacMoves.moveY = 0;
+                        this.pacMoves.direction = "left";
+                        TweenMax.to(this.pacman, 0, {
+                            rotation: 180
+                        });
+                        break;
+                    case "right":
+                    case "d":
+                    case "l":
+                    case "ArrowRight":
+                        this.pacMoves.moveX = 1;
+                        this.pacMoves.moveY = 0;
+                        this.pacMoves.direction = "right";
+                        TweenMax.to(this.pacman, 0, {
+                            rotation: 0
+                        });
+                        break;
+                    default:
+                        this.pacMoves.moveX = 0;
+                        this.pacMoves.moveY = 0;
+                        this.pacMoves.direction = null;
+                        this.message.innerHTML =
+                            "Keyboard: ↑ ↓ ← →, IJKL, and/or ASWD<br>" +
+                            "<br>Swipe: Up Down Left Right to move";
+                }
 
-        // set pacman's new coordinates
-        setCoords() {
-          let move = true;
+                this.setCoords();
+            },
 
-          if (!this.moveTo.interval) this.moveTo.interval = 1;
+            // set pacman's new coordinates
+            setCoords() {
+                let move = true;
 
-          const isUp = this.pacCoords.y > this.box.clientTop; // - this.pacman.clientHeight;
-          const isDown =
-            this.pacCoords.y + this.pacman.clientHeight < this.box.clientHeight;
-          const isLeft =
-            this.pacCoords.x + this.pacman.clientWidth / 2 >
-            this.box.clientLeft; // - this.pacman.clientWidth;
-          const isRight =
-            this.pacCoords.x + this.pacman.clientWidth / 2 <
-            this.box.clientWidth;
+                const bottom = this.den.clientHeight - this.pacman.clientHeight;
+                const rightmost = this.den.clientWidth - this.pacman.clientWidth;
 
-          switch (this.moveTo.direction) {
-            case "up":
-              if (isUp) {
-                this.pacCoords.y += this.moveTo.moveY;
-              } else {
-                this.moveTo.interval = 0;
-                this.pacCoords.y =
-                  this.box.clientHeight - (this.pacman.clientHeight / 2);
-              }
-              break;
-            case "down":
-              if (isDown) {
-                this.pacCoords.y += this.moveTo.moveY;
-              } else {
-                this.moveTo.interval = 0;
-                this.pacCoords.y = this.box.clientTop; // - this.pacman.clientHeight * 2;
-              }
-              break;
-            case "left":
-              if (isLeft) {
-                this.pacCoords.x += this.moveTo.moveX;
-              } else {
-                this.moveTo.interval = 0;
-                this.pacCoords.x =
-                  this.box.clientWidth - this.pacman.clientWidth;
-              }
-              break;
-            case "right":
-              if (isRight) {
-                this.pacCoords.x += this.moveTo.moveX;
-              } else {
-                this.moveTo.interval = 0;
-                this.pacCoords.x =
-                  this.box.clientLeft - this.pacman.clientWidth / 2;
-              }
-              break;
-            default:
-              move = false;
-          }
+                if (!this.pacMoves.interval) this.pacMoves.interval = 1;
 
-          if (move) this.move();
-        },
+                const isUp = this.pacCoords.y > 0;
+                const isDown = this.pacCoords.y < bottom;
+                const isLeft = this.pacCoords.x > 0;
+                const isRight = this.pacCoords.x < rightmost;
 
-        // move pacman based on its coordinates using TweenMax
+                switch (this.pacMoves.direction) {
+                    case "up":
+                        if (isUp) {
+                            this.pacCoords.y += this.pacMoves.moveY;
+                        } else {
+                            this.pacMoves.interval = 0;
+                            this.pacCoords.y = bottom;
+                        }
+                        break;
+                    case "down":
+                        if (isDown) {
+                            this.pacCoords.y += this.pacMoves.moveY;
+                        } else {
+                            this.pacMoves.interval = 0;
+                            this.pacCoords.y = 0;
+                        }
+                        break;
+                    case "left":
+                        if (isLeft) {
+                            this.pacCoords.x += this.pacMoves.moveX;
+                        } else {
+                            this.pacMoves.interval = 0;
+                            this.pacCoords.x = rightmost;
+                        }
+                        break;
+                    case "right":
+                        if (isRight) {
+                            this.pacCoords.x += this.pacMoves.moveX;
+                        } else {
+                            this.pacMoves.interval = 0;
+                            this.pacCoords.x = 0;
+                        }
+                        break;
+                    default:
+                        move = false;
+                }
 
-        move() {
-          TweenMax.to(this.pacman, this.moveTo.interval, {
-            x: this.pacCoords.x,
-            y: this.pacCoords.y
-          });
+                if (move) this.move(this.pacman, this.pacMoves.interval, this.pacCoords.x, this.pacCoords.y);
+
+                if (this.isFood()) {
+                    this.score++;
+                    this.newscore.textContent = `[Your score: ${this.score}]`;
+                    this.newFood();
+                }
+            },
+
+            // move pacman based on its coordinates using TweenMax
+
+            move(elem, interval, x, y) {
+                TweenMax.to(elem, interval, {
+                    x: x,
+                    y: y
+                });
+            },
+
+            isFood() {
+                const foodMinX = this.foodCoords.x; // - this.food.clientWidth;
+                const foodMaxX = this.foodCoords.x + this.food.clientWidth;
+                const foodMinY = this.foodCoords.y; // - this.food.clientHeight;
+                const foodMaxY = this.foodCoords.y + this.food.clientHeight;
+                const pacMinX = this.pacCoords.x; // - this.pacman.clientWidth;
+                const pacMaxX = this.pacCoords.x + this.pacman.clientWidth;
+                const pacMinY = this.pacCoords.y; // - this.pacman.clientHeight;
+                const pacMaxY = this.pacCoords.y + this.pacman.clientHeight;
+
+                const withinX = (foodMinX <= pacMaxX) && (foodMaxX >= pacMinX);
+                const withinY = (foodMinY <= pacMaxY) && (foodMaxY >= pacMinY);
+
+                return withinX && withinY ? true : false;
+            },
+
+            newFood() {
+                const xMin = this.pacman.clientWidth / 2;
+                const yMin = this.pacman.clientHeight / 2;
+                const xMax = this.den.clientWidth - xMin;
+                const yMax = this.den.clientHeight - yMin;
+
+                this.foodCoords.x = Math.floor(Math.random() * (xMax - xMin + 1) + xMin);
+                this.foodCoords.y = Math.floor(Math.random() * (yMax - yMin + 1) + yMin);
+
+                this.move(this.food, 0, this.foodCoords.x, this.foodCoords.y);
+            },
+
+            score: -1
+        };
+
+        window.addEventListener("keydown", game.findDirection.bind(game));
+
+        setInterval(game.setCoords.bind(game), 5);
+
+        game.findDirection("");
+
+        // FINAL STEP - refactor everything into one big object called const game = { ... }
+
+        // ----- SWIPE FUNCTIONS -------------------
+
+        // credit: http://www.javascriptkit.com/javatutors/touchevents2.shtml
+        function swipedetect(el, callback) {
+            var touchsurface = el,
+                swipedir,
+                startX,
+                startY,
+                distX,
+                distY,
+                threshold = 50, //required min distance traveled to be considered swipe
+                restraint = 200, // maximum distance allowed at the same time in perpendicular direction
+                allowedTime = 300, // maximum time allowed to travel that distance
+                elapsedTime,
+                startTime,
+                handleswipe = callback || function(swipedir) {};
+
+            touchsurface.addEventListener(
+                "touchstart",
+                function(e) {
+                    var touchobj = e.changedTouches[0];
+                    swipedir = "none";
+                    dist = 0;
+                    startX = touchobj.pageX;
+                    startY = touchobj.pageY;
+                    startTime = new Date().getTime(); // record time when finger first makes contact with surface
+                    e.preventDefault();
+                },
+                false
+            );
+
+            touchsurface.addEventListener(
+                "touchmove",
+                function(e) {
+                    e.preventDefault(); // prevent scrolling when inside DIV
+                },
+                false
+            );
+
+            touchsurface.addEventListener(
+                "touchend",
+                function(e) {
+                    var touchobj = e.changedTouches[0];
+                    distX = touchobj.pageX - startX; // get horizontal dist traveled by finger while in contact with surface
+                    distY = touchobj.pageY - startY; // get vertical dist traveled by finger while in contact with surface
+                    elapsedTime = new Date().getTime() - startTime; // get time elapsed
+                    if (elapsedTime <= allowedTime) {
+                        // first condition for awipe met
+                        if (
+                            Math.abs(distX) >= threshold &&
+                            Math.abs(distY) <= restraint
+                        ) {
+                            // 2nd condition for horizontal swipe met
+                            swipedir = distX < 0 ? "left" : "right"; // if dist traveled is negative, it indicates left swipe
+                        } else if (
+                            Math.abs(distY) >= threshold &&
+                            Math.abs(distX) <= restraint
+                        ) {
+                            // 2nd condition for vertical swipe met
+                            swipedir = distY < 0 ? "up" : "down"; // if dist traveled is negative, it indicates up swipe
+                        }
+                    }
+                    handleswipe(swipedir);
+                    e.preventDefault();
+                },
+                false
+            );
         }
-      };
 
-      window.addEventListener("keydown", game.findDirection.bind(game));
+        //USAGE:
 
-      setInterval(game.setCoords.bind(game), 4);
-
-      game.findDirection("");
-      // FINAL STEP - refactor everything into one big object called const game = { ... }
-
-      // credit: http://www.javascriptkit.com/javatutors/touchevents2.shtml
-      function swipedetect(el, callback) {
-        var touchsurface = el,
-          swipedir,
-          startX,
-          startY,
-          distX,
-          distY,
-          threshold = 50, //required min distance traveled to be considered swipe
-          restraint = 100, // maximum distance allowed at the same time in perpendicular direction
-          allowedTime = 300, // maximum time allowed to travel that distance
-          elapsedTime,
-          startTime,
-          handleswipe = callback || function(swipedir) {};
-
-        touchsurface.addEventListener(
-          "touchstart",
-          function(e) {
-            var touchobj = e.changedTouches[0];
-            swipedir = "none";
-            dist = 0;
-            startX = touchobj.pageX;
-            startY = touchobj.pageY;
-            startTime = new Date().getTime(); // record time when finger first makes contact with surface
-            e.preventDefault();
-          },
-          false
-        );
-
-        touchsurface.addEventListener(
-          "touchmove",
-          function(e) {
-            e.preventDefault(); // prevent scrolling when inside DIV
-          },
-          false
-        );
-
-        touchsurface.addEventListener(
-          "touchend",
-          function(e) {
-            var touchobj = e.changedTouches[0];
-            distX = touchobj.pageX - startX; // get horizontal dist traveled by finger while in contact with surface
-            distY = touchobj.pageY - startY; // get vertical dist traveled by finger while in contact with surface
-            elapsedTime = new Date().getTime() - startTime; // get time elapsed
-            if (elapsedTime <= allowedTime) {
-              // first condition for awipe met
-              if (
-                Math.abs(distX) >= threshold &&
-                Math.abs(distY) <= restraint
-              ) {
-                // 2nd condition for horizontal swipe met
-                swipedir = distX < 0 ? "left" : "right"; // if dist traveled is negative, it indicates left swipe
-              } else if (
-                Math.abs(distY) >= threshold &&
-                Math.abs(distX) <= restraint
-              ) {
-                // 2nd condition for vertical swipe met
-                swipedir = distY < 0 ? "up" : "down"; // if dist traveled is negative, it indicates up swipe
-              }
-            }
-            handleswipe(swipedir);
-            e.preventDefault();
-          },
-          false
-        );
-      }
-
-      //USAGE:
-
-      swipedetect(game.box, function(swipedir) {
-        // swipedir contains either "none", "left", "right", "top", or "down"
-        let direction = [];
-        direction.key = swipedir;
-        // game.message.textContent = direction.key;
-        game.findDirection(direction);
-      });
+        swipedetect(game.den, function(swipedir) {
+            // swipedir contains either "none", "left", "right", "top", or "down"
+            let direction = [];
+            direction.key = swipedir;
+            // game.message.textContent = direction.key;
+            game.findDirection(direction);
+        });
     </script>
-  </body>
+</body>
+
 </html>
